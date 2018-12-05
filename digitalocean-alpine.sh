@@ -168,7 +168,11 @@ if [ "$?" -ne 0 ]; then
     exit 1
 fi
 
-echo "Rebooting system. You should be able to reconnect shortly." >&2
-reboot
-sleep 1
-reboot
+if [ "$2" != "--no-reboot" ]; then
+    echo "Rebooting system. You should be able to reconnect shortly." >&2
+    reboot
+    sleep 1
+    reboot
+else
+    echo "Reboot system to complete installation" >&2
+fi
