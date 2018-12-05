@@ -6,11 +6,11 @@
 logfile="/tmp/digitalocean-alpine.log"
 
 if [ "$1" = "--step-chroot" ]; then
-	echo -n > "$logfile"
+    echo -n > "$logfile"
 
-	echo -n "  Installing packages..." >&2
+    echo -n "  Installing packages..." >&2
 
-	cat <<EOF > /etc/apk/keys/layeh.com-5b313ebb.rsa.pub
+    cat <<EOF > /etc/apk/keys/layeh.com-5b313ebb.rsa.pub
 -----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8OZrGEUMGjd2oAkYb+qu
 rIT7k5FFS5zP6v/YwOOmbT4iQMHlkEP/Aj1PhKZt4FiirFm3fpVKjJa9uPeWRVC4
@@ -21,96 +21,96 @@ ntnM2l6VIxMDHCxbZ9/cu4o/KjW2iT3802D4EWxPT3eksdZERgSVPTJrKskMzey+
 VwIDAQAB
 -----END PUBLIC KEY-----
 EOF
-	echo "https://cdn.layeh.com/alpine/3.8/" >> /etc/apk/repositories
-	apk update >>"$logfile" 2>>"$logfile"
-	if [ "$?" -ne 0 ]; then
-		echo
-		exit 1
-	fi
+    echo "https://cdn.layeh.com/alpine/3.8/" >> /etc/apk/repositories
+    apk update >>"$logfile" 2>>"$logfile"
+    if [ "$?" -ne 0 ]; then
+        echo
+        exit 1
+    fi
 
-	apk add alpine-base linux-virt syslinux grub grub-bios e2fsprogs eudev openssh digitalocean-alpine >>"$logfile" 2>>"$logfile"
-	if [ "$?" -ne 0 ]; then
-		echo
-		exit 1
-	fi
+    apk add alpine-base linux-virt syslinux grub grub-bios e2fsprogs eudev openssh digitalocean-alpine >>"$logfile" 2>>"$logfile"
+    if [ "$?" -ne 0 ]; then
+        echo
+        exit 1
+    fi
 
-	echo " Done" >&2
+    echo " Done" >&2
 
-	echo -n "  Configuring services..." >&2
+    echo -n "  Configuring services..." >&2
 
-	rc-update add --quiet hostname boot
-	rc-update add --quiet networking boot
-	rc-update add --quiet urandom boot
-	rc-update add --quiet crond default
-	rc-update add --quiet swap boot
-	rc-update add --quiet udev sysinit
-	rc-update add --quiet udev-trigger sysinit
-	rc-update add --quiet sshd default
-	rc-update add --quiet digitalocean boot
+    rc-update add --quiet hostname boot
+    rc-update add --quiet networking boot
+    rc-update add --quiet urandom boot
+    rc-update add --quiet crond default
+    rc-update add --quiet swap boot
+    rc-update add --quiet udev sysinit
+    rc-update add --quiet udev-trigger sysinit
+    rc-update add --quiet sshd default
+    rc-update add --quiet digitalocean boot
 
-	sed -i -r -e 's/^UsePAM yes$/#\1/' /etc/ssh/sshd_config
+    sed -i -r -e 's/^UsePAM yes$/#\1/' /etc/ssh/sshd_config
 
-	sed -i -r -e 's/^(tty[2-6]:)/#\1/' /etc/inittab
+    sed -i -r -e 's/^(tty[2-6]:)/#\1/' /etc/inittab
 
-	echo "/dev/vdb	/media/cdrom	iso9660	ro	0	0" >> /etc/fstab
+    echo "/dev/vdb  /media/cdrom    iso9660 ro  0   0" >> /etc/fstab
 
-	echo " Done" >&2
+    echo " Done" >&2
 
-	echo -n "  Installing bootloader..." >&2
+    echo -n "  Installing bootloader..." >&2
 
-	grub-install /dev/vda >>"$logfile" 2>>"$logfile"
-	if [ "$?" -ne 0 ]; then
-		echo
-		exit 1
-	fi
-	grub-mkconfig -o /boot/grub/grub.cfg >>"$logfile" 2>>"$logfile"
-	if [ "$?" -ne 0 ]; then
-		echo
-		exit 1
-	fi
+    grub-install /dev/vda >>"$logfile" 2>>"$logfile"
+    if [ "$?" -ne 0 ]; then
+        echo
+        exit 1
+    fi
+    grub-mkconfig -o /boot/grub/grub.cfg >>"$logfile" 2>>"$logfile"
+    if [ "$?" -ne 0 ]; then
+        echo
+        exit 1
+    fi
 
-	sync
-	echo " Done" >&2
+    sync
+    echo " Done" >&2
 
-	rm -f "$0"
+    rm -f "$0"
 
-	exit 0
+    exit 0
 fi
 
 if [ "$1" != "--rebuild" ]; then
-	echo "usage: digitalocean-alpine --rebuild" >&2
-	echo "   Rebuild the current droplet with Alpine Linux" >&2
-	echo >&2
-	echo "   WARNING: This is a destructive operation. You will lose your data." >&2
-	echo "            This script has only been tested with Debian 9.4 x64 droplets." >&2
-	exit 1
+    echo "usage: digitalocean-alpine --rebuild" >&2
+    echo "   Rebuild the current droplet with Alpine Linux" >&2
+    echo >&2
+    echo "   WARNING: This is a destructive operation. You will lose your data." >&2
+    echo "            This script has only been tested with Debian 9.4 x64 droplets." >&2
+    exit 1
 fi
 
 if [ "$(id -u)" -ne "0" ]; then
-	echo "digitalocean-alpine: script must be run as root" >&2
-	exit 1
+    echo "digitalocean-alpine: script must be run as root" >&2
+    exit 1
 fi
 
 SCRIPTPATH="$(realpath "$0")"
 
 if [ \! -x "$SCRIPTPATH" ]; then
-	echo "digitalocean-alpine: script must be executable" >&2
-	exit 1
+    echo "digitalocean-alpine: script must be executable" >&2
+    exit 1
 fi
 
 echo -n "Downloading Alpine 3.8.0..." >&2
 wget -q -O /tmp/rootfs.tar.gz http://dl-cdn.alpinelinux.org/alpine/v3.8/releases/x86_64/alpine-minirootfs-3.8.0-x86_64.tar.gz
 if [ "$?" -ne 0 ]; then
-	echo " Failed!" >&2
-	exit 1
+    echo " Failed!" >&2
+    exit 1
 fi
 echo " Done" >&2
 
 echo -n "Verifying SHA256 checksum..." >&2
 echo "ae36d6ea2033131cfc649afa13d7271367c386e7a0dbd5b3d0671a2ede22a2f1  /tmp/rootfs.tar.gz" | sha256sum -c >/dev/null 2>&1
 if [ "$?" -ne 0 ]; then
-	echo " Failed!" >&2
-	exit 1
+    echo " Failed!" >&2
+    exit 1
 fi
 echo " OK" >&2
 
@@ -164,8 +164,8 @@ echo " Done" >&2
 echo "chroot configuration..." >&2
 chroot /oldroot /bin/ash /tmp/digitalocean-alpine.sh --step-chroot
 if [ "$?" -ne 0 ]; then
-	echo "ERROR: could not install Alpine Linux. See /oldroot$logfile" >&2
-	exit 1
+    echo "ERROR: could not install Alpine Linux. See /oldroot$logfile" >&2
+    exit 1
 fi
 
 echo "Rebooting system. You should be able to reconnect shortly." >&2
